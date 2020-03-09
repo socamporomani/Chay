@@ -19,7 +19,7 @@ public class hiloCliente extends Thread {
     private PrintStream ps;
     private Socket clientSocket;
     private final hiloCliente[] hilos;
-    private DataInputStream is;
+    private DataInputStream dis;
     
     public hiloCliente(Socket clientSocket, hiloCliente[] hilo) {
         this.clientSocket=clientSocket;
@@ -29,6 +29,7 @@ public class hiloCliente extends Thread {
     
     public void run(){
         int max=10;
+         String salir ;
         hiloCliente[] hilo=this.hilos;
         try {
  
@@ -36,7 +37,7 @@ public class hiloCliente extends Thread {
          
             while (true) {                
                 ps.println("Introduce tu nombre de usuario");
-                Usuario=is.readUTF();
+                Usuario=dis.readUTF();
             if (Usuario.indexOf('@')==-1){
                 break;
             }
@@ -59,11 +60,58 @@ public class hiloCliente extends Thread {
             }
          
             while (true) {                
-                String salir = is.readUTF();
-                if(salir.startsWith("/bye"));
+                salir = dis.readUTF();
+                if(salir.startsWith("/bye")){
                 break;
             }
  
+            
+        if (salir.startsWith("@")){
+            // revision
+            String[] texto =salir.split("\\s",2);
+            if (texto.length>1 && texto[1] !=null){
+                texto[1]=texto[1].trim();
+                if(!texto[1].isEmpty()){
+                    synchronized (this){
+                        for (int i=0;i< max;i++){
+                            if(hilo[i]!=null && hilo[i].nombre.equals(texto[0])){
+                                hilo[i].ps.println("<"+Usuario+">");
+                                this.ps.println(">@"+ Usuario+">");
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+        else{
+            synchronized(this){
+                for(int i=0;i<max;i++){
+                    if(hilo[i]!= null && hilo[i].nombre !=null){
+                        hilo[i].ps.println("<"+Usuario+">");
+                    }
+                }
+            }
+        }
+            }
+            synchronized(this){
+                for (int i=0;i<max;i++){
+                    if(hilo[i]!=null && hilo[i]!=this&& hilo[i].nombre!=null){
+                        hilo[i].ps.println("@"+Usuario+" se fué");
+                    }
+                }
+            }
+            ps.println("Has salido del grupo");
+           synchronized(this){
+               for(int i =0;i<max;i++){
+                   if(hilo[i]==this){
+                       hilo[i] =null;
+                   }
+               }
+           } 
+            dis.close();
+            ps.close();
+            clientSocket.close();
             
         } catch (Exception e) {
         }
