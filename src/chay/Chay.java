@@ -1,10 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package chay;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,7 +13,7 @@ import javax.swing.JOptionPane;
 public class Chay {
 
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         
         Object[] servcli={"Servidor", "cliente"};
         String pred ="Servidor";
@@ -25,9 +21,13 @@ public class Chay {
         if(selec.equals("Servidor")){
             String[] arguments=new String[]{};
             new MultiHilo().main(arguments);
-        }else
-            new cliente().main("localhost");
-    }
+        }else if(selec.equals("cliente")){
+            String ip=JOptionPane.showInputDialog("introduce ip", "localhost");
+            String[] arguments = new String[] {ip};
+           new cliente().main(arguments);
+        }
+        
+        }
 }
         
         class MultiHilo{
@@ -49,7 +49,7 @@ public class Chay {
                 
                 clientSocket=serverSocket.accept();
                 int i=0;
-                for (i=0;i<10;i++){
+                for (i=0;i<3;i++){
                     if(hilo[i]==null){
                         (hilo[i]=new hiloCliente(clientSocket,hilo)).start();
                         break;

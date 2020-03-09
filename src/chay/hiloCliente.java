@@ -1,119 +1,103 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package chay;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 
-/**
- *
- * @author socamporomani
- */
-public class hiloCliente extends Thread {
+public class hiloCliente extends Thread{
+     private String nombre = null;
+  private DataInputStream dis = null;
+  private PrintStream ps = null;
+  private Socket clientSocket = null;
+  private final hiloCliente[] hilos;
+  private int maxClientsCount;
 
-    private String nombre;
-    private PrintStream ps;
-    private Socket clientSocket;
-    private final hiloCliente[] hilos;
-    private DataInputStream dis;
-    
-    public hiloCliente(Socket clientSocket, hiloCliente[] hilo) {
-        this.clientSocket=clientSocket;
-        this.hilos=hilo;
-     //   int 10 =int length = hilo.length;
-    }
-    
-    public void run(){
-        int max=10;
-         String salir ;
-        hiloCliente[] hilo=this.hilos;
-        try {
- 
-         String Usuario;
-         
-            while (true) {                
-                ps.println("Introduce tu nombre de usuario");
-                Usuario=dis.readUTF();
-            if (Usuario.indexOf('@')==-1){
-                break;
-            }
-            }
-            ps.println("Bienvenido al grupo "+Usuario + " \n para salir introduce /bye"
+  public hiloCliente(Socket clientSocket, hiloCliente[] hilera) {
+    this.clientSocket = clientSocket;
+    this.hilos = hilera;
+    maxClientsCount = hilera.length;
+  }
+
+  public void run() {
+    int maxClientsCount = this.maxClientsCount;
+    hiloCliente[] hilera = this.hilos;
+
+    try {
+      dis = new DataInputStream(clientSocket.getInputStream());
+      ps = new PrintStream(clientSocket.getOutputStream());
+      String Usuario;
+      while (true) {
+         ps.println("Introduce tu nombre de usuario");
+        Usuario = dis.readLine().trim();
+        if (Usuario.indexOf('@') == -1) {
+          break;
+        }
+      }
+
+     ps.println("Bienvenido al grupo "+Usuario + " \n para salir introduce /bye"
                     + "\n"
                     + "para un mensaje privado pon '@nombre_de_usuario'");
-            synchronized(this){
-                for(int i=0;i<max;i++){
-                    if(hilo[i] != null && hilo[i]==this){
-                        nombre="@"+Usuario;
-                        break;
-                    }
-                }
-                for(int i=0;i<max;i++){
-                    if(hilo[i]!=null&&hilo[i]!= this){
-                        hilo[i].ps.println("Un "+ Usuario+" salvaje ha aparecido");
-                    }
-                }
-            }
-         
-            while (true) {                
-                salir = dis.readUTF();
-                if(salir.startsWith("/bye")){
-                break;
-            }
- 
-            
-        if (salir.startsWith("@")){
-            // revision
-            String[] texto =salir.split("\\s",2);
-            if (texto.length>1 && texto[1] !=null){
-                texto[1]=texto[1].trim();
-                if(!texto[1].isEmpty()){
-                    synchronized (this){
-                        for (int i=0;i< max;i++){
-                            if(hilo[i]!=null && hilo[i].nombre.equals(texto[0])){
-                                hilo[i].ps.println("<"+Usuario+">");
-                                this.ps.println(">@"+ Usuario+">");
-                            }
-                        }
-                    }
-                }
-            }
-            
+            synchronized (this) {
+        for (int i = 0; i < maxClientsCount; i++) {
+          if (hilera[i] != null && hilera[i] == this) {
+            nombre = "@" + Usuario;
+            break;
+          }
         }
-        else{
-            synchronized(this){
-                for(int i=0;i<max;i++){
-                    if(hilo[i]!= null && hilo[i].nombre !=null){
-                        hilo[i].ps.println("<"+Usuario+">");
-                    }
-                }
-            }
+        for (int i = 0; i < maxClientsCount; i++) {
+          if (hilera[i] != null && hilera[i] != this) {
+         hilera[i].ps.println("Un "+ Usuario+" salvaje ha aparecido");
+
+          }
         }
-            }
-            synchronized(this){
-                for (int i=0;i<max;i++){
-                    if(hilo[i]!=null && hilo[i]!=this&& hilo[i].nombre!=null){
-                        hilo[i].ps.println("@"+Usuario+" se fué");
-                    }
-                }
-            }
-            ps.println("Has salido del grupo");
-           synchronized(this){
-               for(int i =0;i<max;i++){
-                   if(hilo[i]==this){
-                       hilo[i] =null;
-                   }
-               }
-           } 
-            dis.close();
-            ps.close();
-            clientSocket.close();
-            
-        } catch (Exception e) {
+      }
+      while (true) {
+        String salirP = dis.readLine();
+        if (salirP.startsWith("/bye")) {
+          break;
         }
+        if (salirP.startsWith("@")) {
+          String[] texto = salirP.split("\\s", 2);
+          if (texto.length > 1 && texto[1] != null) {
+            texto[1] = texto[1].trim();
+            if (!texto[1].isEmpty()) {
+              synchronized (this) {
+                for (int i = 0; i < maxClientsCount; i++) {
+                  if (hilera[i] != null 
+                      && hilera[i].nombre.equals(texto[0])) {
+                    hilera[i].ps.println("<@" + Usuario + "> " + texto[1]);
+                    this.ps.println(">" + Usuario + "> " + texto[1]);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          synchronized (this) {
+            for (int i = 0; i < maxClientsCount; i++) {
+              if (hilera[i] != null && hilera[i].nombre != null) {
+                hilera[i].ps.println("<" + Usuario + "> " + salirP);
+              }
+            }
+          }
+        }
+      }
+      synchronized (this) {
+        for (int i = 0; i < maxClientsCount; i++) {
+          if (hilera[i] != null && hilera[i] != this
+              && hilera[i].nombre != null) {
+                hilera[i].ps.println("@"+Usuario+" se fué");
+
+          }
+        }
+      }
+      ps.println("Has salid del grupo exitosamente");
+      dis.close();
+      ps.close();
+      clientSocket.close();
+    } catch (IOException e) {
     }
+  }
 }
