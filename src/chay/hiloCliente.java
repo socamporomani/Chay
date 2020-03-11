@@ -93,7 +93,7 @@ public class hiloCliente extends Thread{
           }
         }
       }
-      ps.println("Has salid del grupo exitosamente");
+      ps.println("Has salido del grupo exitosamente");
       dis.close();
       ps.close();
       clientSocket.close();

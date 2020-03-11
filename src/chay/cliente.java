@@ -142,7 +142,7 @@ frame.setTitle("CHAT multicliente");
         try {
             accesso.InitSocket(server,port);
         } catch (IOException ex) {
-            System.out.println("Cannot connect to " + server + ":" + port);
+            System.out.println("No se puede conector " + server + ":" + port);
             ex.printStackTrace();
             System.exit(0);
         }
